@@ -143,19 +143,19 @@ def build_dataloader(dataset,
         # a mini-batch indices each time.
         # it can be used in both `DataParallel` and
         # `DistributedDataParallel`
-        batch_sampler = InfiniteBalancedBatchSampler(  # for SAMV2
-            dataset, batch_size, world_size, rank, seed=seed, ratio=[5, 1])
-        # if shuffle:
-        #     batch_sampler = InfiniteGroupBatchSampler(
-        #         dataset, batch_size, world_size, rank, seed=seed)
-        # else:
-        #     batch_sampler = InfiniteBatchSampler(
-        #         dataset,
-        #         batch_size,
-        #         world_size,
-        #         rank,
-        #         seed=seed,
-        #         shuffle=False)
+        # batch_sampler = InfiniteBalancedBatchSampler(  # for SAMV2
+        #     dataset, batch_size, world_size, rank, seed=seed, ratio=[5, 1])
+        if shuffle:
+            batch_sampler = InfiniteGroupBatchSampler(
+                dataset, batch_size, world_size, rank, seed=seed)
+        else:
+            batch_sampler = InfiniteBatchSampler(
+                dataset,
+                batch_size,
+                world_size,
+                rank,
+                seed=seed,
+                shuffle=False)
         batch_size = 1
         sampler = None
     else:
