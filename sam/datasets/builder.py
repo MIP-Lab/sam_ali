@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from mmdet.datasets.samplers import (DistributedGroupSampler, DistributedSampler,
                                      GroupSampler, InfiniteBatchSampler,
                                      InfiniteGroupBatchSampler)
-from .samplers.infinite_balanced_sampler import InfiniteBalancedBatchSampler
+from .samplers.my_infinite_balanced_sampler import InfiniteBalancedBatchSampler
 
 if platform.system() != 'Windows':
     # https://github.com/pytorch/pytorch/issues/973
