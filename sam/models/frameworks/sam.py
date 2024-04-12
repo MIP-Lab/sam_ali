@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from torch import linalg as LA
 import time
 import pickle
+import matplotlib.pyplot as plt
 
 
 class nodes():
@@ -141,7 +142,7 @@ class Sam(BaseDetector):
         return loss
 
     def single_fine_loss(self, fine_feat, coarse_feat, fine_grid, coarse_grid, fine_vaild, coarse_valid, *args):
-
+            
         view_1_fine = fine_feat[0, :, :, :, :].view(128, -1)
         view_2_fine = fine_feat[1, :, :, :, :].view(128, -1)
 
