@@ -1290,7 +1290,7 @@ class ComputeAugParam():
             else:
                 intersection_x = np.random.randint(-x_interval + 1, -x_interval + 10)
         else:
-            intersection_x = np.random.randint(-x_interval + 5, min(view1_crop_size[1], view2_crop_size[1]) - 2)
+            intersection_x = np.random.randint(-x_interval + 1, min(view1_crop_size[1], view2_crop_size[1]) - 2)
 
         if z_interval > 2:
             p = np.random.rand(1)
