@@ -1,7 +1,11 @@
 _base_ = [
-    '../_base_/datasets/cochlear_sam_accre_2mm.py',
     '../_base_/my_default_runtime.py'
 ]
+
+dataset_type = 'Dataset3dsam'
+data_root = '/nobackup/mip_eecs/sud/reg_cochlear_new/data_128_inAtlas_99clip/'
+
+patch_size = (96, 96, 32)
 
 model = dict(
     type='Sam',
@@ -59,11 +63,11 @@ model = dict(
     ))
 view1_pipline = [
     dict(type="ExtraAttrs", tag="view1"),
-    dict(type="Crop", fix_size=(96, 96, 32)),
+    dict(type="Crop", fix_size=patch_size),
     # dict(type="RandomAffine3d"),
     # dict(type="RandomElasticDeformation"),
     dict(type="Resample", norm_spacing=(2, 2, 2)),
-    dict(type="Crop", switch='fix', fix_size=(96, 96, 32)),
+    dict(type="Crop", switch='fix', fix_size=patch_size),
     dict(type='RescaleIntensity', out_min_max=(0, 255), in_min_max=(-1, 1)),
     dict(type="RandomNoise3d"),
     dict(type="RandomBlur3d"),
@@ -80,11 +84,11 @@ view1_pipline = [
 ]
 view2_pipline = [
     dict(type="ExtraAttrs", tag="view2"),
-    dict(type="Crop", fix_size=(96, 96, 32)),
+    dict(type="Crop", fix_size=patch_size),
     # dict(type="RandomAffine3d"),
     # dict(type="RandomElasticDeformation"),
     dict(type="Resample", norm_spacing=(2, 2, 2)),
-    dict(type="Crop", switch='fix', fix_size=(96, 96, 32)),
+    dict(type="Crop", switch='fix', fix_size=patch_size),
     dict(type='RescaleIntensity', out_min_max=(0, 255), in_min_max=(-1, 1)),
     dict(type="RandomNoise3d"),
     dict(type="RandomBlur3d"),
@@ -104,7 +108,7 @@ train_pipeline = [
     dict(type='LoadTioImage'),
     # dict(type='RescaleIntensity'),
     # dict(type='CropBackground'),
-    dict(type='ComputeAugParam', standard_spacing=(2, 2, 2), patch_size=(96, 96, 32)),
+    dict(type='ComputeAugParam', standard_spacing=(2, 2, 2), patch_size=patch_size),
     dict(
         type="MultiBranch", view1=view1_pipline, view2=view2_pipline
     ),
@@ -122,6 +126,9 @@ data = dict(
     samples_per_gpu=3,
     workers_per_gpu=1,
     train=dict(
+        type=dataset_type,
+        data_dir=data_root + 'train/Pre_img_2mm/',
+        index_file=data_root + 'reg_cochlear_sam_train.csv',
         pipeline=train_pipeline,
     ),
     val=dict(
