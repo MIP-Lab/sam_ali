@@ -294,6 +294,16 @@ class LoadTioImage:
         image_fn = data['image_fn']
         img_tio = tio.ScalarImage(os.path.join(data_path, image_fn))
         # for NIH lymph node dataset covert orientation to PLS+
+
+        if img_tio.spacing[0] < 0.5:
+            # img_tio.spacing = (2.0, 2.0, 2.0)
+            old_affine = img_tio.affine.copy()
+            old_affine[0, 0] = old_affine[0, 0] * 10
+            old_affine[1, 1] = old_affine[1, 1] * 10
+            old_affine[2, 2] = old_affine[2, 2] * 10
+            # very strange, need this sentence to make the next sentence takes effect
+            img_data = img_tio.data
+            img_tio.affine = old_affine
         if self.re_orient:
             img_data = img_tio.data
             img_tio.data = img_data.permute(0, 2, 1, 3)

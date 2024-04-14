@@ -11,6 +11,63 @@ import torch
 
 import SimpleITK as sitk
 
+def read_image_cochlear(path, mask_path=None, norm_spacing=(2., 2., 2.), crop_loc=None, is_MRI=False, to_canonical=True,
+               remove_bed=False):
+    data = {}
+    origin_info = {}
+    image_fn = path.split('/', -1)[-1]
+    data_path = path.replace(image_fn, '')
+
+    img_tio = tio.ScalarImage(data_path + image_fn)
+    if to_canonical:
+        ToCanonical = tio.ToCanonical()
+        img_tio = ToCanonical(img_tio)
+    # print(img_tio.spacing)
+    if img_tio.orientation == ('R', 'A', 'S'):
+        img_data = img_tio.data
+        img_tio.data = torch.flip(img_data, (1, 2))
+        img_tio.affine = np.array(
+            [-img_tio.affine[0, :], -img_tio.affine[1, :], img_tio.affine[2, :], img_tio.affine[3, :]])
+    assert img_tio.orientation == ('L', 'P', 'S'), print('right now the image orientation need to be LPS+ ')
+    img_data = img_tio.data
+    img_tio.data = img_data.permute(0, 2, 1, 3)
+    img_tio.affine = np.array(
+        [img_tio.affine[1, :], img_tio.affine[0, :], img_tio.affine[2, :], img_tio.affine[3, :]])
+
+    origin_data = img_tio.data.numpy().copy()
+    img_tio_shape = img_tio.data.shape  # tio use lazy loading, so we read image shape from data.shape to force it load image here
+    img_tio_spacing = img_tio.spacing
+    img_tio_affine = img_tio.affine
+    norm_ratio = np.array(img_tio_spacing) / np.array(norm_spacing)
+    subject = tio.Subject(
+        image=img_tio
+    )
+    data['image_fn'] = image_fn
+    data['subject'] = subject
+    if not crop_loc is None:
+        crop_filter = Crop(by_view=False)
+        data['crop_matrix_origin'] = crop_loc
+        data = crop_filter(data)
+
+    resample_filter = Resample(norm_spacing=norm_spacing, crop_artifacts=False)
+    data = resample_filter(data)
+    affine_resampled = data['subject'].image.affine
+
+    rescale_filter = RescaleIntensity(out_min_max=(0, 255), in_min_max=(-1, 1))
+    data = rescale_filter(data)
+    meta_collect_filter = GenerateMetaInfo(is_train=False)
+    data = meta_collect_filter(data)
+    data['is_mri'] = is_MRI
+    collects = Collect3d(keys=['img'], meta_keys=['filename', 'is_mri'])
+    input = collects(data)
+    batch = collate([input])
+    # batch['img_metas'] =  batch['img_metas'].data
+    origin_info['img'] = origin_data[0, :, :, :]  # yxz
+    origin_info['shape'] = img_tio_shape
+    origin_info['spacing'] = img_tio_spacing
+    origin_info['affine'] = img_tio_affine
+    origin_info['affine_resampled'] = affine_resampled
+    return origin_info, batch, norm_ratio
 
 def read_image(path, mask_path=None, norm_spacing=(2., 2., 2.), crop_loc=None, is_MRI=False, to_canonical=True,
                remove_bed=False):
